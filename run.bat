@@ -30,14 +30,17 @@ if /i "%LOGIN_CHOICE%"=="1" (
     echo [*] Analiz baslatiliyor (giris yapilmis)...
     echo.
     py main.py -u %USERNAME% -p %PASSWORD% -t %TARGET%
-) else (
-    echo.
-    echo [*] Analiz baslatiliyor (giris yapilmadan)...
-    echo [*] Not: Instagram genellikle takipci ve takip edilen listelerini korumali tutar.
-    echo [*] Eger calismazsa, giris yaparak tekrar deneyin.
-    echo.
-    py main.py -t %TARGET%
+    goto :end
 )
+
+echo.
+echo [*] Analiz baslatiliyor (giris yapilmadan)...
+echo [*] Not: Instagram genellikle takipci ve takip edilen listelerini korumali tutar.
+echo [*] Eger calismazsa, giris yaparak tekrar deneyin.
+echo.
+py main.py -t %TARGET%
+
+:end
 
 echo.
 echo [*] Islem tamamlandi!
