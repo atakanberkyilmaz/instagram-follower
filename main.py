@@ -69,6 +69,36 @@ def get_user_id_safe(cl: Client, username: str) -> str:
             return cl.user_id_from_username(username)
 
 
+def get_username_safe(cl: Client, user_id: str) -> str:
+    """
+    Güvenli bir şekilde username alır (username_from_user_id hatası için workaround)
+    
+    Args:
+        cl: Instagram client
+        user_id: User ID
+    
+    Returns:
+        str: Username veya None
+    """
+    try:
+        return cl.username_from_user_id(user_id)
+    except (KeyError, Exception):
+        # API'den 'data' anahtarı gelmedi veya başka bir hata oluştu
+        # Alternatif yöntemler dene
+        try:
+            # user_info_by_id metodunu dene
+            user_info = cl.user_info_by_id(user_id)
+            return user_info.username
+        except:
+            try:
+                # user_info metodunu dene
+                user_info = cl.user_info(user_id)
+                return user_info.username
+            except:
+                # Başarısız oldu, None döndür
+                return None
+
+
 def get_followers(cl: Client, username: str) -> Set[str]:
     """
     Belirli bir kullanıcının takipçilerini getirir
@@ -84,7 +114,24 @@ def get_followers(cl: Client, username: str) -> Set[str]:
     try:
         user_id = get_user_id_safe(cl, username)
         followers = cl.user_followers(user_id)
-        follower_usernames = {cl.username_from_user_id(uid) for uid in followers.keys()}
+        
+        # Username'leri güvenli bir şekilde al
+        follower_usernames = set()
+        failed_count = 0
+        
+        for uid in followers.keys():
+            username_result = get_username_safe(cl, uid)
+            if username_result:
+                follower_usernames.add(username_result)
+            else:
+                failed_count += 1
+            # Rate limiting için kısa bekleme
+            if len(follower_usernames) % 50 == 0:
+                time.sleep(1)
+        
+        if failed_count > 0:
+            print(f"[!] {failed_count} kullanıcının username'i alınamadı (API limiti olabilir)")
+        
         print(f"[+] {len(follower_usernames)} takipçi bulundu.")
         return follower_usernames
     except Exception as e:
@@ -110,7 +157,24 @@ def get_following(cl: Client, username: str) -> Set[str]:
     try:
         user_id = get_user_id_safe(cl, username)
         following = cl.user_following(user_id)
-        following_usernames = {cl.username_from_user_id(uid) for uid in following.keys()}
+        
+        # Username'leri güvenli bir şekilde al
+        following_usernames = set()
+        failed_count = 0
+        
+        for uid in following.keys():
+            username_result = get_username_safe(cl, uid)
+            if username_result:
+                following_usernames.add(username_result)
+            else:
+                failed_count += 1
+            # Rate limiting için kısa bekleme
+            if len(following_usernames) % 50 == 0:
+                time.sleep(1)
+        
+        if failed_count > 0:
+            print(f"[!] {failed_count} kullanıcının username'i alınamadı (API limiti olabilir)")
+        
         print(f"[+] {len(following_usernames)} takip edilen hesap bulundu.")
         return following_usernames
     except Exception as e:
