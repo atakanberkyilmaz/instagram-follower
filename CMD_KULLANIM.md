@@ -5,19 +5,31 @@
 ### 1. Gerekli Paketleri Yükle
 
 ```cmd
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
+```
+
+veya
+
+```cmd
+python -m pip install -r requirements.txt
 ```
 
 ### 2. Scripti Çalıştır
 
 #### Temel Kullanım:
 ```cmd
+py main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI
+```
+
+veya
+
+```cmd
 python main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI
 ```
 
 #### Örnek:
 ```cmd
-python main.py -u benim_kullanici_adi -p benim_sifrem -t hedef_kullanici
+py main.py -u benim_kullanici_adi -p benim_sifrem -t hedef_kullanici
 ```
 
 ## Alternatif Yöntemler
@@ -33,13 +45,13 @@ Bu dosya sizi adım adım yönlendirecek ve gerekli bilgileri soracaktır.
 ### Sadece Takip Etmeyenleri Bul
 
 ```cmd
-python main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI --non-followers-only
+py main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI --non-followers-only
 ```
 
 ### Sadece Takip Edilenleri Listele
 
 ```cmd
-python main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI --following-only
+py main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI --following-only
 ```
 
 ## Parametreler
@@ -57,19 +69,19 @@ python main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI --following-only
 ### Senaryo 1: Kendi Hesabınızı Analiz Etme
 
 ```cmd
-python main.py -u benim_kullanici_adi -p benim_sifrem -t benim_kullanici_adi
+py main.py -u benim_kullanici_adi -p benim_sifrem -t benim_kullanici_adi
 ```
 
 ### Senaryo 2: Başka Bir Hesabı Analiz Etme
 
 ```cmd
-python main.py -u benim_kullanici_adi -p benim_sifrem -t baska_bir_kullanici
+py main.py -u benim_kullanici_adi -p benim_sifrem -t baska_bir_kullanici
 ```
 
 ### Senaryo 3: Sadece Takip Etmeyenleri Bulma
 
 ```cmd
-python main.py -u benim_kullanici_adi -p benim_sifrem -t hedef_kullanici --non-followers-only
+py main.py -u benim_kullanici_adi -p benim_sifrem -t hedef_kullanici --non-followers-only
 ```
 
 ## Çıktı Dosyaları
@@ -98,8 +110,15 @@ py main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI
 ### Paket Yükleme Hatası
 
 ```cmd
-pip install --upgrade pip
-pip install -r requirements.txt
+py -m pip install --upgrade pip
+py -m pip install -r requirements.txt
+```
+
+veya
+
+```cmd
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 ### İki Faktörlü Doğrulama (2FA)

@@ -15,6 +15,13 @@ Bu Python scripti, belirli bir Instagram hesabında takip analizi yapmanıza ola
 2. Gerekli paketleri yükleyin:
 
 ```bash
+# Windows için:
+py -m pip install -r requirements.txt
+
+# veya
+python -m pip install -r requirements.txt
+
+# Linux/Mac için:
 pip install -r requirements.txt
 ```
 
@@ -23,6 +30,13 @@ pip install -r requirements.txt
 ### Temel Kullanım
 
 ```bash
+# Windows için:
+py main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI
+
+# veya
+python main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI
+
+# Linux/Mac için:
 python main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI
 ```
 
@@ -38,13 +52,13 @@ python main.py -u KULLANICI_ADI -p SIFRE -t HEDEF_KULLANICI
 
 ```bash
 # Tüm analizi yap (takip edilenler ve takip etmeyenler)
-python main.py -u benim_kullanici_adi -p benim_sifrem -t hedef_kullanici
+py main.py -u benim_kullanici_adi -p benim_sifrem -t hedef_kullanici
 
 # Sadece takip etmeyenleri bul
-python main.py -u benim_kullanici_adi -p benim_sifrem -t hedef_kullanici --non-followers-only
+py main.py -u benim_kullanici_adi -p benim_sifrem -t hedef_kullanici --non-followers-only
 
 # Sadece takip edilenleri listele
-python main.py -u benim_kullanici_adi -p benim_sifrem -t hedef_kullanici --following-only
+py main.py -u benim_kullanici_adi -p benim_sifrem -t hedef_kullanici --following-only
 ```
 
 ## Çıktılar

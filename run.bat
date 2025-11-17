@@ -7,7 +7,7 @@ echo.
 
 REM Gerekli paketlerin yüklü olduğundan emin ol
 echo [*] Gerekli paketler kontrol ediliyor...
-pip install -r requirements.txt >nul 2>&1
+py -m pip install -r requirements.txt
 
 echo.
 echo [*] Script başlatılıyor...
@@ -23,7 +23,7 @@ echo [*] Analiz başlatılıyor...
 echo.
 
 REM Scripti çalıştır
-python main.py -u %USERNAME% -p %PASSWORD% -t %TARGET%
+py main.py -u %USERNAME% -p %PASSWORD% -t %TARGET%
 
 echo.
 echo [*] İşlem tamamlandı!
