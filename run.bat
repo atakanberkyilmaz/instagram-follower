@@ -12,6 +12,9 @@ py -m pip install -r requirements.txt >nul 2>&1
 echo.
 echo [*] Script baslatiliyor...
 echo.
+echo [*] NOT: Bu script calisirken ilerleme durumunu gosterecektir.
+echo [*] Sonuclar CMD ekraninda goruntulenecektir (text dosyasi olusturulmayacak).
+echo.
 
 REM Hedef kullanici adini al
 set /p TARGET="Analiz edilecek hedef kullanici adini girin: "
@@ -58,6 +61,8 @@ if "%PASSWORD%"=="" (
 
 echo.
 echo [*] Analiz baslatiliyor (giris yapilmis)...
+echo [*] Lutfen bekleyin, islem biraz zaman alabilir...
+echo [*] Ilerleme durumu ekranda goruntulenecektir.
 echo.
 py main.py -u %USERNAME% -p %PASSWORD% -t %TARGET%
 if errorlevel 1 (
@@ -73,6 +78,8 @@ echo.
 echo [*] Analiz baslatiliyor (giris yapilmadan)...
 echo [*] Not: Instagram genellikle takipci ve takip edilen listelerini korumali tutar.
 echo [*] Eger calismazsa, giris yaparak tekrar deneyin.
+echo [*] Lutfen bekleyin, islem biraz zaman alabilir...
+echo [*] Ilerleme durumu ekranda goruntulenecektir.
 echo.
 py main.py -t %TARGET%
 if errorlevel 1 (
@@ -86,5 +93,7 @@ goto :end
 :end
 echo.
 echo [*] Islem tamamlandi!
+echo [*] Sonuclar yukarida goruntulenmistir.
+echo [*] Takip ettiginiz ancak sizi takip etmeyen hesaplar listelenmistir.
 pause
 
