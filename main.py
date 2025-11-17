@@ -144,16 +144,27 @@ def get_followers(cl: Client, username: str, require_login: bool = False) -> Set
         # Username'leri güvenli bir şekilde al
         follower_usernames = set()
         failed_count = 0
+        total_followers = len(followers)
         
-        for uid in followers.keys():
+        print(f"[*] {total_followers} takipci ID'si bulundu, username'lere ceviriliyor...")
+        
+        for idx, uid in enumerate(followers.keys(), 1):
             username_result = get_username_safe(cl, uid)
             if username_result:
                 follower_usernames.add(username_result)
             else:
                 failed_count += 1
+            
+            # Progress göstergesi
+            if idx % 10 == 0 or idx == total_followers:
+                progress = (idx / total_followers) * 100
+                print(f"[*] Ilerleme: {idx}/{total_followers} ({progress:.1f}%) - {len(follower_usernames)} username alindi...", end='\r')
+            
             # Rate limiting için kısa bekleme
             if len(follower_usernames) % 50 == 0:
                 time.sleep(1)
+        
+        print()  # Yeni satır için
         
         if failed_count > 0:
             print(f"[!] {failed_count} kullanıcının username'i alınamadı (API limiti olabilir)")
@@ -209,16 +220,27 @@ def get_following(cl: Client, username: str, require_login: bool = False) -> Set
         # Username'leri güvenli bir şekilde al
         following_usernames = set()
         failed_count = 0
+        total_following = len(following)
         
-        for uid in following.keys():
+        print(f"[*] {total_following} takip edilen ID'si bulundu, username'lere ceviriliyor...")
+        
+        for idx, uid in enumerate(following.keys(), 1):
             username_result = get_username_safe(cl, uid)
             if username_result:
                 following_usernames.add(username_result)
             else:
                 failed_count += 1
+            
+            # Progress göstergesi
+            if idx % 10 == 0 or idx == total_following:
+                progress = (idx / total_following) * 100
+                print(f"[*] Ilerleme: {idx}/{total_following} ({progress:.1f}%) - {len(following_usernames)} username alindi...", end='\r')
+            
             # Rate limiting için kısa bekleme
             if len(following_usernames) % 50 == 0:
                 time.sleep(1)
+        
+        print()  # Yeni satır için
         
         if failed_count > 0:
             print(f"[!] {failed_count} kullanıcının username'i alınamadı (API limiti olabilir)")
@@ -338,35 +360,46 @@ def main():
         except Exception as e:
             print(f"[!] Hesap bilgileri alinamadi: {e}")
     
-    # Sonuçları göster ve kaydet
-    if not args.following_only and len(followers) > 0:
+    # Karşılaştırma ve sonuçları CMD'de göster
+    print("\n" + "=" * 60)
+    print("KARSILASTIRMA SONUCLARI")
+    print("=" * 60)
+    
+    if len(followers) > 0 and len(following) > 0:
+        print(f"\n[*] Toplam takipci sayisi: {len(followers)}")
+        print(f"[*] Toplam takip edilen sayisi: {len(following)}")
+        
+        # Karşılaştırma yap
+        print(f"\n[*] Karsilastirma yapiliyor...")
         non_followers = find_non_followers(followers, following)
-        print(f"\n[*] {args.target} hesabını takip etmeyenler: {len(non_followers)}")
+        
+        print(f"\n[+] SONUC: {len(non_followers)} kisi sizi takip etmiyor!")
+        print("=" * 60)
         
         if non_followers:
-            print("\n[+] Takip etmeyenler:")
-            for i, username in enumerate(non_followers[:20], 1):  # İlk 20'yi göster
-                print(f"  {i}. {username}")
-            if len(non_followers) > 20:
-                print(f"  ... ve {len(non_followers) - 20} tane daha")
+            print(f"\n[*] Takip ettiginiz ancak sizi takip etmeyen hesaplar:\n")
+            for i, username in enumerate(non_followers, 1):
+                print(f"  {i:4d}. {username}")
             
-            save_results(f"{args.target}_non_followers.txt", non_followers, 
-                        f"{args.target} hesabını takip etmeyenler")
+            print(f"\n[*] Toplam: {len(non_followers)} hesap")
         else:
-            print("[+] Tüm takip edilenler sizi de takip ediyor!")
+            print("\n[+] Harika! Tum takip ettikleriniz sizi de takip ediyor!")
     
-    if not args.non_followers_only and len(following) > 0:
+    elif len(following) > 0:
         following_list = sorted(list(following))
-        print(f"\n[*] {args.target} hesabının takip ettiği hesaplar: {len(following_list)}")
-        
-        print("\n[+] Takip edilenler (ilk 20):")
-        for i, username in enumerate(following_list[:20], 1):
-            print(f"  {i}. {username}")
-        if len(following_list) > 20:
-            print(f"  ... ve {len(following_list) - 20} tane daha")
-        
-        save_results(f"{args.target}_following.txt", following_list,
-                    f"{args.target} hesabının takip ettiği hesaplar")
+        print(f"\n[*] {args.target} hesabinin takip ettigi hesaplar: {len(following_list)}")
+        print("\n[+] Takip edilenler:\n")
+        for i, username in enumerate(following_list, 1):
+            print(f"  {i:4d}. {username}")
+    
+    elif len(followers) > 0:
+        followers_list = sorted(list(followers))
+        print(f"\n[*] {args.target} hesabinin takipcileri: {len(followers_list)}")
+        print("\n[+] Takipciler:\n")
+        for i, username in enumerate(followers_list, 1):
+            print(f"  {i:4d}. {username}")
+    
+    print("\n" + "=" * 60)
     
     print("\n[+] Analiz tamamlandı!")
 
