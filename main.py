@@ -8,20 +8,37 @@ Belirli bir Instagram hesabında:
 """
 
 import sys
+import os
+import json
+import csv
 from instagrapi import Client
 from instagrapi.exceptions import LoginRequired, TwoFactorRequired
 import argparse
-from typing import List, Set
+from typing import List, Set, Optional
 import time
 
 
-def login_to_instagram(username: str = None, password: str = None) -> Client:
+def get_session_path(username: str) -> str:
     """
-    Instagram'a giriş yapar (opsiyonel)
+    Session dosya yolunu döndürür
+    
+    Args:
+        username: Kullanıcı adı
+    
+    Returns:
+        str: Session dosya yolu
+    """
+    return f"{username}_session.json"
+
+
+def login_to_instagram(username: str = None, password: str = None, save_session: bool = True) -> Client:
+    """
+    Instagram'a giriş yapar (opsiyonel, session kaydetme desteği ile)
     
     Args:
         username: Instagram kullanıcı adı (opsiyonel)
         password: Instagram şifresi (opsiyonel)
+        save_session: Session kaydedilsin mi
     
     Returns:
         Client: Instagram client objesi (giriş yapılmış veya yapılmamış)
@@ -33,16 +50,53 @@ def login_to_instagram(username: str = None, password: str = None) -> Client:
         print("[*] Giriş yapılmadan devam ediliyor (sadece açık hesaplar için)...")
         return cl
     
+    session_path = get_session_path(username)
+    
+    # Kaydedilmiş session varsa yükle
+    if os.path.exists(session_path):
+        try:
+            print(f"[*] Kaydedilmis session bulundu, yukleniyor...")
+            cl.load_settings(session_path)
+            # Session geçerli mi kontrol et
+            try:
+                cl.get_timeline_feed()
+                print("[+] Session basariyla yuklendi!")
+                return cl
+            except:
+                print("[!] Session gecersiz, yeni giris yapiliyor...")
+                os.remove(session_path)
+        except Exception as e:
+            print(f"[!] Session yuklenirken hata: {e}")
+            print("[*] Yeni giris yapiliyor...")
+    
     try:
         print(f"[*] {username} hesabına giriş yapılıyor...")
         cl.login(username, password)
         print("[+] Giriş başarılı!")
+        
+        # Session kaydet
+        if save_session:
+            try:
+                cl.dump_settings(session_path)
+                print(f"[+] Session kaydedildi: {session_path}")
+            except Exception as e:
+                print(f"[!] Session kaydedilemedi: {e}")
+        
         return cl
     except TwoFactorRequired:
         print("[!] İki faktörlü doğrulama gerekli.")
         code = input("2FA kodunu girin: ")
         cl.login(username, password, verification_code=code)
         print("[+] Giriş başarılı!")
+        
+        # Session kaydet
+        if save_session:
+            try:
+                cl.dump_settings(session_path)
+                print(f"[+] Session kaydedildi: {session_path}")
+            except Exception as e:
+                print(f"[!] Session kaydedilemedi: {e}")
+        
         return cl
     except Exception as e:
         print(f"[!] Giriş hatası: {e}")
@@ -272,21 +326,48 @@ def find_non_followers(followers: Set[str], following: Set[str]) -> List[str]:
     return sorted(list(non_followers))
 
 
-def save_results(filename: str, data: List[str], title: str):
+def export_to_csv(filename: str, data: List[str], title: str):
     """
-    Sonuçları dosyaya kaydeder
+    Sonuçları CSV formatında kaydeder
     
     Args:
         filename: Kayıt edilecek dosya adı
         data: Kaydedilecek veri listesi
         title: Dosya başlığı
     """
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(f"{title}\n")
-        f.write("=" * 50 + "\n\n")
+    csv_filename = filename.replace('.txt', '.csv') if filename.endswith('.txt') else f"{filename}.csv"
+    with open(csv_filename, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow([title])
+        writer.writerow(['Sira', 'Kullanici Adi'])
         for i, username in enumerate(data, 1):
-            f.write(f"{i}. {username}\n")
-    print(f"[+] Sonuçlar '{filename}' dosyasına kaydedildi.")
+            writer.writerow([i, username])
+    print(f"[+] CSV dosyasi kaydedildi: {csv_filename}")
+
+
+def export_to_json(filename: str, data: List[str], title: str, metadata: dict = None):
+    """
+    Sonuçları JSON formatında kaydeder
+    
+    Args:
+        filename: Kayıt edilecek dosya adı
+        data: Kaydedilecek veri listesi
+        title: Dosya başlığı
+        metadata: Ek bilgiler
+    """
+    json_filename = filename.replace('.txt', '.json') if filename.endswith('.txt') else f"{filename}.json"
+    export_data = {
+        'title': title,
+        'total_count': len(data),
+        'data': data,
+        'exported_at': time.strftime('%Y-%m-%d %H:%M:%S')
+    }
+    if metadata:
+        export_data['metadata'] = metadata
+    
+    with open(json_filename, 'w', encoding='utf-8') as f:
+        json.dump(export_data, f, ensure_ascii=False, indent=2)
+    print(f"[+] JSON dosyasi kaydedildi: {json_filename}")
 
 
 def main():
@@ -320,7 +401,8 @@ def main():
     print()
     
     # Giriş yap (opsiyonel)
-    cl = login_to_instagram(args.username, args.password)
+    save_session = not args.no_session
+    cl = login_to_instagram(args.username, args.password, save_session=save_session)
     is_logged_in = args.username and args.password
     
     if not is_logged_in:
@@ -391,6 +473,19 @@ def main():
         print("\n[+] Takip edilenler:\n")
         for i, username in enumerate(following_list, 1):
             print(f"  {i:4d}. {username}")
+        
+        # Export işlemi
+        if args.export:
+            metadata = {
+                'target_username': args.target,
+                'total_following': len(following_list)
+            }
+            if args.export in ['csv', 'both']:
+                export_to_csv(f"{args.target}_following", following_list,
+                             f"{args.target} hesabinin takip ettigi hesaplar")
+            if args.export in ['json', 'both']:
+                export_to_json(f"{args.target}_following", following_list,
+                              f"{args.target} hesabinin takip ettigi hesaplar", metadata)
     
     elif len(followers) > 0:
         followers_list = sorted(list(followers))
@@ -398,6 +493,19 @@ def main():
         print("\n[+] Takipciler:\n")
         for i, username in enumerate(followers_list, 1):
             print(f"  {i:4d}. {username}")
+        
+        # Export işlemi
+        if args.export:
+            metadata = {
+                'target_username': args.target,
+                'total_followers': len(followers_list)
+            }
+            if args.export in ['csv', 'both']:
+                export_to_csv(f"{args.target}_followers", followers_list,
+                             f"{args.target} hesabinin takipcileri")
+            if args.export in ['json', 'both']:
+                export_to_json(f"{args.target}_followers", followers_list,
+                              f"{args.target} hesabinin takipcileri", metadata)
     
     print("\n" + "=" * 60)
     

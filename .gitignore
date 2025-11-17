@@ -36,6 +36,12 @@ env/
 # Output files
 *_non_followers.txt
 *_following.txt
+*_followers.txt
+*.csv
+*.json
+
+# Session files
+*_session.json
 
 # Credentials
 *.env
