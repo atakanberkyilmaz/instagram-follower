@@ -392,6 +392,10 @@ def main():
                        help='Sadece takip etmeyenleri göster')
     parser.add_argument('--following-only', action='store_true',
                        help='Sadece takip edilenleri göster')
+    parser.add_argument('--export', choices=['csv', 'json', 'both'],
+                       help='Sonuclari export et (csv, json, veya both)')
+    parser.add_argument('--no-session', action='store_true',
+                       help='Session kaydetme (giris yaparken)')
     
     args = parser.parse_args()
     
