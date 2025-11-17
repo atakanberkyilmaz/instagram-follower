@@ -15,18 +15,23 @@ from typing import List, Set
 import time
 
 
-def login_to_instagram(username: str, password: str) -> Client:
+def login_to_instagram(username: str = None, password: str = None) -> Client:
     """
-    Instagram'a giriş yapar
+    Instagram'a giriş yapar (opsiyonel)
     
     Args:
-        username: Instagram kullanıcı adı
-        password: Instagram şifresi
+        username: Instagram kullanıcı adı (opsiyonel)
+        password: Instagram şifresi (opsiyonel)
     
     Returns:
-        Client: Giriş yapılmış Instagram client objesi
+        Client: Instagram client objesi (giriş yapılmış veya yapılmamış)
     """
     cl = Client()
+    
+    # Giriş bilgileri verilmemişse, giriş yapmadan devam et
+    if not username or not password:
+        print("[*] Giriş yapılmadan devam ediliyor (sadece açık hesaplar için)...")
+        return cl
     
     try:
         print(f"[*] {username} hesabına giriş yapılıyor...")
@@ -41,7 +46,8 @@ def login_to_instagram(username: str, password: str) -> Client:
         return cl
     except Exception as e:
         print(f"[!] Giriş hatası: {e}")
-        sys.exit(1)
+        print("[!] Giriş yapmadan devam ediliyor (sadece açık hesaplar için)...")
+        return cl
 
 
 def get_user_id_safe(cl: Client, username: str) -> str:
@@ -99,13 +105,14 @@ def get_username_safe(cl: Client, user_id: str) -> str:
                 return None
 
 
-def get_followers(cl: Client, username: str) -> Set[str]:
+def get_followers(cl: Client, username: str, require_login: bool = False) -> Set[str]:
     """
     Belirli bir kullanıcının takipçilerini getirir
     
     Args:
         cl: Instagram client
         username: Analiz edilecek kullanıcı adı
+        require_login: Giriş gerekli mi kontrolü
     
     Returns:
         Set[str]: Takipçi kullanıcı adları seti
@@ -113,7 +120,18 @@ def get_followers(cl: Client, username: str) -> Set[str]:
     print(f"[*] {username} hesabının takipçileri alınıyor...")
     try:
         user_id = get_user_id_safe(cl, username)
-        followers = cl.user_followers(user_id)
+        
+        # Giriş yapılmamışsa, takipçi listesini alamayız
+        try:
+            followers = cl.user_followers(user_id)
+        except Exception as e:
+            if "login" in str(e).lower() or "LoginRequired" in str(type(e).__name__):
+                print("[!] Takipçi listesini almak icin giris yapmaniz gerekiyor.")
+                print("[!] Giriş yapmadan sadece hesap bilgileri görüntülenebilir.")
+                if require_login:
+                    sys.exit(1)
+                return set()
+            raise
         
         # Username'leri güvenli bir şekilde al
         follower_usernames = set()
@@ -137,18 +155,21 @@ def get_followers(cl: Client, username: str) -> Set[str]:
     except Exception as e:
         print(f"[!] Takipçiler alınırken hata: {e}")
         print(f"[!] Hata detayı: {type(e).__name__}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+        if require_login:
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
+        return set()
 
 
-def get_following(cl: Client, username: str) -> Set[str]:
+def get_following(cl: Client, username: str, require_login: bool = False) -> Set[str]:
     """
     Belirli bir kullanıcının takip ettiği hesapları getirir
     
     Args:
         cl: Instagram client
         username: Analiz edilecek kullanıcı adı
+        require_login: Giriş gerekli mi kontrolü
     
     Returns:
         Set[str]: Takip edilen kullanıcı adları seti
@@ -156,7 +177,18 @@ def get_following(cl: Client, username: str) -> Set[str]:
     print(f"[*] {username} hesabının takip ettikleri alınıyor...")
     try:
         user_id = get_user_id_safe(cl, username)
-        following = cl.user_following(user_id)
+        
+        # Giriş yapılmamışsa, takip edilen listesini alamayız
+        try:
+            following = cl.user_following(user_id)
+        except Exception as e:
+            if "login" in str(e).lower() or "LoginRequired" in str(type(e).__name__):
+                print("[!] Takip edilen listesini almak icin giris yapmaniz gerekiyor.")
+                print("[!] Giriş yapmadan sadece hesap bilgileri görüntülenebilir.")
+                if require_login:
+                    sys.exit(1)
+                return set()
+            raise
         
         # Username'leri güvenli bir şekilde al
         following_usernames = set()
@@ -180,9 +212,11 @@ def get_following(cl: Client, username: str) -> Set[str]:
     except Exception as e:
         print(f"[!] Takip edilenler alınırken hata: {e}")
         print(f"[!] Hata detayı: {type(e).__name__}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+        if require_login:
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
+        return set()
 
 
 def find_non_followers(followers: Set[str], following: Set[str]) -> List[str]:
@@ -229,10 +263,10 @@ def main():
         """
     )
     
-    parser.add_argument('-u', '--username', required=True,
-                       help='Instagram kullanıcı adınız (giriş için)')
-    parser.add_argument('-p', '--password', required=True,
-                       help='Instagram şifreniz')
+    parser.add_argument('-u', '--username', required=False,
+                       help='Instagram kullanıcı adınız (giriş için, opsiyonel)')
+    parser.add_argument('-p', '--password', required=False,
+                       help='Instagram şifreniz (giriş için, opsiyonel)')
     parser.add_argument('-t', '--target', required=True,
                        help='Analiz edilecek hedef Instagram kullanıcı adı')
     parser.add_argument('--non-followers-only', action='store_true',
@@ -247,23 +281,46 @@ def main():
     print("=" * 50)
     print()
     
-    # Giriş yap
+    # Giriş yap (opsiyonel)
     cl = login_to_instagram(args.username, args.password)
+    is_logged_in = args.username and args.password
+    
+    if not is_logged_in:
+        print("[!] UYARI: Giriş yapılmadı!")
+        print("[!] Takipçi ve takip edilen listelerini almak icin giris yapmaniz gerekiyor.")
+        print("[!] Giriş yapmadan sadece hesap bilgileri görüntülenebilir.")
+        print()
     
     # Rate limiting için bekleme
     time.sleep(2)
     
     # Takipçileri ve takip edilenleri al
     if not args.following_only:
-        followers = get_followers(cl, args.target)
+        followers = get_followers(cl, args.target, require_login=is_logged_in)
         time.sleep(2)
     
     if not args.non_followers_only:
-        following = get_following(cl, args.target)
+        following = get_following(cl, args.target, require_login=is_logged_in)
         time.sleep(2)
     
+    # Giriş yapılmamışsa ve hiçbir veri alınamamışsa, hesap bilgilerini göster
+    if not is_logged_in and len(followers) == 0 and len(following) == 0:
+        try:
+            print(f"[*] {args.target} hesabının bilgileri alınıyor...")
+            user_info = cl.user_info_by_username_v1(args.target)
+            print(f"\n[+] Hesap Bilgileri:")
+            print(f"  Kullanıcı Adı: {user_info.username}")
+            print(f"  Tam Ad: {user_info.full_name}")
+            print(f"  Takipçi Sayısı: {user_info.follower_count:,}")
+            print(f"  Takip Edilen Sayısı: {user_info.following_count:,}")
+            print(f"  Gönderi Sayısı: {user_info.media_count:,}")
+            print(f"  Biyografi: {user_info.biography}")
+            print(f"\n[!] Not: Takipçi ve takip edilen listelerini gormek icin giris yapmaniz gerekiyor.")
+        except Exception as e:
+            print(f"[!] Hesap bilgileri alinamadi: {e}")
+    
     # Sonuçları göster ve kaydet
-    if not args.following_only:
+    if not args.following_only and len(followers) > 0:
         non_followers = find_non_followers(followers, following)
         print(f"\n[*] {args.target} hesabını takip etmeyenler: {len(non_followers)}")
         
@@ -279,7 +336,7 @@ def main():
         else:
             print("[+] Tüm takip edilenler sizi de takip ediyor!")
     
-    if not args.non_followers_only:
+    if not args.non_followers_only and len(following) > 0:
         following_list = sorted(list(following))
         print(f"\n[*] {args.target} hesabının takip ettiği hesaplar: {len(following_list)}")
         
