@@ -44,6 +44,31 @@ def login_to_instagram(username: str, password: str) -> Client:
         sys.exit(1)
 
 
+def get_user_id_safe(cl: Client, username: str) -> str:
+    """
+    Güvenli bir şekilde user_id alır (user_id_from_username hatası için workaround)
+    
+    Args:
+        cl: Instagram client
+        username: Kullanıcı adı
+    
+    Returns:
+        str: User ID
+    """
+    try:
+        # Önce v1 API'yi dene
+        user_info = cl.user_info_by_username_v1(username)
+        return str(user_info.pk)
+    except:
+        try:
+            # Alternatif: user_info kullan
+            user_info = cl.user_info(username)
+            return str(user_info.pk)
+        except:
+            # Son çare: user_id_from_username (hatalı olabilir ama deneyelim)
+            return cl.user_id_from_username(username)
+
+
 def get_followers(cl: Client, username: str) -> Set[str]:
     """
     Belirli bir kullanıcının takipçilerini getirir
@@ -57,13 +82,16 @@ def get_followers(cl: Client, username: str) -> Set[str]:
     """
     print(f"[*] {username} hesabının takipçileri alınıyor...")
     try:
-        user_id = cl.user_id_from_username(username)
+        user_id = get_user_id_safe(cl, username)
         followers = cl.user_followers(user_id)
         follower_usernames = {cl.username_from_user_id(uid) for uid in followers.keys()}
         print(f"[+] {len(follower_usernames)} takipçi bulundu.")
         return follower_usernames
     except Exception as e:
         print(f"[!] Takipçiler alınırken hata: {e}")
+        print(f"[!] Hata detayı: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 
@@ -80,13 +108,16 @@ def get_following(cl: Client, username: str) -> Set[str]:
     """
     print(f"[*] {username} hesabının takip ettikleri alınıyor...")
     try:
-        user_id = cl.user_id_from_username(username)
+        user_id = get_user_id_safe(cl, username)
         following = cl.user_following(user_id)
         following_usernames = {cl.username_from_user_id(uid) for uid in following.keys()}
         print(f"[+] {len(following_usernames)} takip edilen hesap bulundu.")
         return following_usernames
     except Exception as e:
         print(f"[!] Takip edilenler alınırken hata: {e}")
+        print(f"[!] Hata detayı: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 
