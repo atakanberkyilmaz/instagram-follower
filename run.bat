@@ -17,12 +17,12 @@ REM Hedef kullanıcı adını al
 set /p TARGET="Analiz edilecek hedef kullanici adini girin: "
 
 echo.
-echo [*] Giriş yapmak ister misiniz?
+echo [*] Giris yapmak ister misiniz?
 echo    1. Evet (Kesin sonuc icin giris yapin - tavsiye edilir)
 echo    2. Hayir (Giris yapmadan deneyelim - Instagram genellikle engeller)
 set /p LOGIN_CHOICE="Seciminiz (1/2): "
 
-if "%LOGIN_CHOICE%"=="1" (
+if /i "%LOGIN_CHOICE%"=="1" (
     echo.
     set /p USERNAME="Instagram kullanici adinizi girin: "
     set /p PASSWORD="Instagram sifrenizi girin: "
