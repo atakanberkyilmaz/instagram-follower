@@ -107,7 +107,7 @@ def get_username_safe(cl: Client, user_id: str) -> str:
 
 def get_followers(cl: Client, username: str, require_login: bool = False) -> Set[str]:
     """
-    Belirli bir kullanıcının takipçilerini getirir
+    Belirli bir kullanıcının takipçilerini getirir (giriş yapmadan da deneyebilir)
     
     Args:
         cl: Instagram client
@@ -121,17 +121,25 @@ def get_followers(cl: Client, username: str, require_login: bool = False) -> Set
     try:
         user_id = get_user_id_safe(cl, username)
         
-        # Giriş yapılmamışsa, takipçi listesini alamayız
+        # Giriş yapmadan da deneyelim (açık hesaplar için)
         try:
             followers = cl.user_followers(user_id)
+            print("[+] Takipci listesi basariyla alindi!")
         except Exception as e:
-            if "login" in str(e).lower() or "LoginRequired" in str(type(e).__name__):
-                print("[!] Takipçi listesini almak icin giris yapmaniz gerekiyor.")
-                print("[!] Giriş yapmadan sadece hesap bilgileri görüntülenebilir.")
+            error_msg = str(e).lower()
+            error_type = str(type(e).__name__)
+            
+            # Giriş gerektiren hatalar
+            if "login" in error_msg or "LoginRequired" in error_type or "authentication" in error_msg:
+                print("[!] Takipci listesini almak icin giris yapmaniz gerekiyor.")
+                print("[!] Instagram API'si takipci listelerini korumali tutuyor.")
                 if require_login:
                     sys.exit(1)
                 return set()
-            raise
+            else:
+                # Başka bir hata, tekrar fırlat
+                print(f"[!] Beklenmeyen hata: {e}")
+                raise
         
         # Username'leri güvenli bir şekilde al
         follower_usernames = set()
@@ -164,7 +172,7 @@ def get_followers(cl: Client, username: str, require_login: bool = False) -> Set
 
 def get_following(cl: Client, username: str, require_login: bool = False) -> Set[str]:
     """
-    Belirli bir kullanıcının takip ettiği hesapları getirir
+    Belirli bir kullanıcının takip ettiği hesapları getirir (giriş yapmadan da deneyebilir)
     
     Args:
         cl: Instagram client
@@ -178,17 +186,25 @@ def get_following(cl: Client, username: str, require_login: bool = False) -> Set
     try:
         user_id = get_user_id_safe(cl, username)
         
-        # Giriş yapılmamışsa, takip edilen listesini alamayız
+        # Giriş yapmadan da deneyelim (açık hesaplar için)
         try:
             following = cl.user_following(user_id)
+            print("[+] Takip edilen listesi basariyla alindi!")
         except Exception as e:
-            if "login" in str(e).lower() or "LoginRequired" in str(type(e).__name__):
+            error_msg = str(e).lower()
+            error_type = str(type(e).__name__)
+            
+            # Giriş gerektiren hatalar
+            if "login" in error_msg or "LoginRequired" in error_type or "authentication" in error_msg:
                 print("[!] Takip edilen listesini almak icin giris yapmaniz gerekiyor.")
-                print("[!] Giriş yapmadan sadece hesap bilgileri görüntülenebilir.")
+                print("[!] Instagram API'si takip edilen listelerini korumali tutuyor.")
                 if require_login:
                     sys.exit(1)
                 return set()
-            raise
+            else:
+                # Başka bir hata, tekrar fırlat
+                print(f"[!] Beklenmeyen hata: {e}")
+                raise
         
         # Username'leri güvenli bir şekilde al
         following_usernames = set()
@@ -287,8 +303,8 @@ def main():
     
     if not is_logged_in:
         print("[!] UYARI: Giriş yapılmadı!")
-        print("[!] Takipçi ve takip edilen listelerini almak icin giris yapmaniz gerekiyor.")
-        print("[!] Giriş yapmadan sadece hesap bilgileri görüntülenebilir.")
+        print("[*] Giriş yapmadan takipci ve takip edilen listelerini almaya calisiyoruz...")
+        print("[*] Not: Instagram genellikle bu bilgileri korumali tutar, giris gerekebilir.")
         print()
     
     # Rate limiting için bekleme
