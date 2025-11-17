@@ -468,6 +468,21 @@ def main():
                 print(f"  {i:4d}. {username}")
             
             print(f"\n[*] Toplam: {len(non_followers)} hesap")
+            
+            # Export işlemi
+            if args.export:
+                metadata = {
+                    'target_username': args.target,
+                    'total_followers': len(followers),
+                    'total_following': len(following),
+                    'non_followers_count': len(non_followers)
+                }
+                if args.export in ['csv', 'both']:
+                    export_to_csv(f"{args.target}_non_followers", non_followers, 
+                                 f"{args.target} hesabini takip etmeyenler")
+                if args.export in ['json', 'both']:
+                    export_to_json(f"{args.target}_non_followers", non_followers,
+                                  f"{args.target} hesabini takip etmeyenler", metadata)
         else:
             print("\n[+] Harika! Tum takip ettikleriniz sizi de takip ediyor!")
     
