@@ -295,6 +295,9 @@ def main():
     time.sleep(2)
     
     # Takipçileri ve takip edilenleri al
+    followers = set()
+    following = set()
+    
     if not args.following_only:
         followers = get_followers(cl, args.target, require_login=is_logged_in)
         time.sleep(2)
