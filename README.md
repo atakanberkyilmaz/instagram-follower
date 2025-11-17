@@ -71,4 +71,3 @@ Script çalıştırıldığında şu dosyalar oluşturulur:
 ## Lisans
 
 Bu proje açık kaynaklıdır ve eğitim amaçlıdır.
-
