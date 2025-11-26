@@ -1,5 +1,32 @@
 # Instagram Follower Analiz Aracı
 
+---
+
+## ⚠️ PROJE ASKIYA ALINDI ⚠️
+
+> **Durum:** 🚫 **AKTİF DEĞİL**  
+> **Tarih:** Kasım 2025  
+> **Sebep:** Instagram hesap ban'ı  
+
+### Ne Oldu?
+Instagram tarafından hesaba ban uygulandığı için bu script şu an kullanılamaz durumda. API erişimi engellendiğinden dolayı proje geçici olarak rafa kaldırıldı.
+
+### Ban Çözülene Kadar:
+- ❌ Yeni commit atılmayacak
+- ❌ Script test edilemeyecek
+- ❌ Aktif geliştirme yapılmayacak
+- ⏳ Proje bekleme modunda
+
+### Çözüm Önerileri (araştırılacak):
+- [ ] Instagram hesap itirazı yapılması
+- [ ] Farklı bir hesap ile test edilmesi
+- [ ] Proxy kullanımı değerlendirilmesi
+- [ ] API rate limiting stratejisinin gözden geçirilmesi
+
+---
+
+## 📋 Proje Hakkında
+
 Bu Python scripti, belirli bir Instagram hesabında takip analizi yapmanıza olanak sağlar.
 
 ## Özellikler
